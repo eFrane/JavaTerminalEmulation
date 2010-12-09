@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<project name="console" default="dist" basedir=".">
+<project name="Java Terminal Emulation" default="dist" basedir=".">
   <description>
    Simple build file for the java-based console emulation
   </description>
