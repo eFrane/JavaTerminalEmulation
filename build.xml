@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="console" default="dist" basedir=".">
+  <description>
+   Simple build file for the java-based console emulation
+  </description>
+
+  <!-- set global properties for this build -->
+  <property name="src" location="src" />
+  <property name="build" location="build" />
+  <property name="dist" location="dist" />
+  <property name="doc" location="doc" />
+
+  <target name="init">
+   <mkdir dir="${build}" />
+  </target>
+
+  <target name="compile" depends="init">
+   <javac srcdir="${src}" destdir="${build}" includeAntRuntime="false" />
+   <buildnumber/>
+  </target>
+
+  <target name="dist" depends="compile">
+   <mkdir dir="${dist}/lib" />
+   <jar jarfile="${dist}/lib/console.jar" basedir="${build}">
+    <manifest>
+      <attribute name="Main-Class"
+                 value="test.GUIMain"/>
+      <attribute name="Build-Number" value="${build.number}" />
+    </manifest>
+   </jar>
+  </target>
+
+  <target name="run" depends="dist">
+    <java jar="${dist}/lib/console.jar" fork="true" />
+  </target>
+
+  <target name="doc">
+    <mkdir dir="${doc}" />
+    <javadoc
+      sourcepath="${src}"
+      packagenames="console.*"
+      destdir="${doc}" />
+  </target>
+
+  <target name="clean">
+   <delete dir="${build}" />
+   <delete dir="${dist}" />
+  </target>
+
+  <target name="distclean" depends="clean">
+   <delete dir="${src}" />
+  </target>
+</project>
