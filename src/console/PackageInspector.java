@@ -1,4 +1,4 @@
-package de.stefangraupner.automaticwifi.main;
+package console;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,13 +12,13 @@ import java.util.LinkedList;
  * The PackageInspector allows to get all classes from a specified package.
  * It also has support to return only classes which are subclasses of a
  * specific superclass or interface.
- * 
+ *
  * @author Stefan Graupner <stefan.graupner@gmail.com>
  **/
 public class PackageInspector {
 	String packageName;
 	LinkedList<Class<?>> classes;
-	
+
 	/**
 	 * Constructor to set the package name (Fully qualified!)
 	 * @param packageName
@@ -27,10 +27,10 @@ public class PackageInspector {
 		this.packageName = packageName;
 		this.classes = new LinkedList<Class<?>>();
 	}
-	
+
 	/**
-	 * 
-	 * @return the full list of Classes found in the Package 
+	 *
+	 * @return the full list of Classes found in the Package
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
@@ -38,9 +38,9 @@ public class PackageInspector {
 		obtainClassList();
 		return classes;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param baseClass fully qualified name of a class (not necessarily inside the same package)
 	 * @return list of classes from the package having baseClass as interface or superclass
 	 * @throws IOException
@@ -55,7 +55,7 @@ public class PackageInspector {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param baseClass Class-instance of a baseClass
 	 * @return list of all classes which have baseClass as interface or superclass
 	 * @throws IOException
@@ -74,13 +74,13 @@ public class PackageInspector {
 	private boolean isSuperClass(Class<?> next, String baseClass) {
 		boolean isSuperclass = false;
 		Class<?> current = next;
-		
+
 		// check interfaces
 		Class<?>[] interfaces = current.getInterfaces();
 		for (Class<?> anInterface : interfaces) {
 			if (anInterface.getName().equals(baseClass)) return true;
 		}
-		
+
 		// check for superclass
 		while (!isSuperclass) {
 			current = current.getSuperclass();
@@ -92,7 +92,7 @@ public class PackageInspector {
 		}
 		return isSuperclass;
 	}
-	
+
 	/**
 	 * This method is the entry point method to obtain the class list of a package
 	 * @throws IOException
@@ -102,19 +102,19 @@ public class PackageInspector {
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		obtainClassList(cl);
 	}
-	
+
 	/**
 	 * This obtainClassList() method does the real work with the current class loader
 	 * Using the thread's class loader enables the package inspector to be used with
 	 * any available loader.
-	 * 
+	 *
 	 * @param loader
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
 	protected void obtainClassList(ClassLoader loader) throws IOException, ClassNotFoundException {
 		String path = packageName.replace('.', '/');
-		
+
 		Enumeration<URL> resources = loader.getResources(path);
 		if (resources != null) {
 			String filePath = resources.nextElement().getFile();

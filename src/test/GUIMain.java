@@ -41,7 +41,6 @@ public class GUIMain extends JFrame {
 
 		console = new Console(20, 80);
 		add(console, BorderLayout.CENTER);
-//		console.reset();
 		pack();
 	}
 }

@@ -12,6 +12,10 @@ import javax.swing.JTextArea;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
+import java.util.LinkedList;
+
+import console.commands.*;
+
 public class Console extends JTextArea {
   private static final long serialVersionUID = -5603283231339635077L;
 
@@ -23,7 +27,7 @@ public class Console extends JTextArea {
   String delimiter = " > ";
   String currentLineContent = "";
 
-  LinkedList<Class<?>> commands = new LinkedList<Class<?>>();
+  LinkedList<Command> commands = new LinkedList<Command>();
 
   public Console(int rows, int columns) {
     super(rows, columns);
@@ -46,11 +50,13 @@ public class Console extends JTextArea {
 
   public synchronized void write(String toWrite) {
     setOffsetToEnd();
+
     try {
       getDocument().insertString(currentOffset, toWrite, null);
     } catch (BadLocationException e) {
       // silence is golden
     }
+
     currentOffset += toWrite.length();
     setCaretPosition(currentOffset);
   }
@@ -64,7 +70,9 @@ public class Console extends JTextArea {
       write(toWrite+"\n"+delimiter);
     } else {
       try {
-        getDocument().insertString(0, toWrite+"\n", null);
+        int offset = currentOffset - currentLineContent.length()
+                                   - delimiter.length();
+        getDocument().insertString(offset, toWrite+"\n", null);
       } catch (BadLocationException e) {
         // silence...
       }
@@ -96,9 +104,37 @@ public class Console extends JTextArea {
 
   protected void loadCommands() {
     writeln("Loading commands...", false);
+    LinkedList<Class<?>> classes = new LinkedList<Class<?>>();
+    try {
+      PackageInspector pi = new PackageInspector("console.commands");
+      classes = pi.getClasses("console.commands.Command");
+    } catch (Exception e) {
+      writeln("  WARNING: there was an error while loading the commands\n"
+             +"           this console instance might be useless.", false);
+    }
 
-    PackageInspector pi = new PackageInspector("console.commands");
-    commands = pi.getClasses("console.commands.Command");
+    writeln("  Found "+classes.size()+" commands...", false);
+    for (Class<?> c : classes) {
+      boolean isFine = true;
+      try {
+        Object newObj = c.newInstance();
+        commands.add((Command) newObj);
+      } catch(Exception e) {
+        isFine = false;
+      } finally {
+        if (isFine) {
+          writeln("  - "+c.getName()+" [OK]", false);
+        } else {
+          writeln("  - "+c.getName()+" [ERROR]", false);
+        }
+      }
+    }
+  }
+
+  private boolean isCommand(String cmd) {
+    for (Command c : commands)
+      if (c.getClass().getName().equals(cmd)) return true;
+    return false;
   }
 
   public synchronized void executeCommand() {

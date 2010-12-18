@@ -10,27 +10,29 @@
 
 app=$1
 
-# clean existing app
+echo "Creating $app.app..."
+
+echo "Cleaning existing app..."
 if [ -d $app.app ]
 then
   rm -rf $app.app
 fi
 
-# create directory structure
+echo "Creating directory structure..."
 mkdir makeapp_temp
 cd makeapp_temp
 mkdir -p $app.app $app.app/Contents/MacOS $app.app/Contents/Resources/Java
 
-# set bundle bit
+echo "Setting bundle bit..."
 /usr/bin/SetFile -a B $app.app
 
-# copy Mac OS java application stub
+echo "Copying Mac OS Java Application stub..."
 cp -r /System/Library/Frameworks/JavaVM.framework/Versions/Current/Resources/MacOS/ ./$app.app/Contents/MacOS/
 
-# look for Info.plist and Icon file
+echo "Looking for Info.plist and Icon file..."
 if [ ! -f ../Info.plist ]
 then
-  echo "No Info.plist was found, aborting..."
+  echo "[ERROR] No Info.plist was found, aborting..."
   exit
 else
   cp ../Info.plist $app.app/Contents/
@@ -38,13 +40,13 @@ fi
 
 if [ ! -f ../*.icns ]
 then
-  echo "No Icon was found, using default..."
+  echo "[WARNING] No Icon was found, using default..."
 else
   echo "Copying icon file. Remember to make sure it is referenced in your Info.plist..."
   cp ../*.icns $app.app/Contents/Resources/
 fi
 
-# copy ant build products
+echo "Fetching jarbundles..."
 if [ ! -d ../dist ]
 then
   echo "No dist directory found, consider ant re-run..."
@@ -52,6 +54,7 @@ else
   cp -r ../dist/* $app.app/Contents/Resources/java/
 fi
 
+echo "Finishing..."
 # PkgInfo
 touch $app.app/Contents/PkgInfo
 

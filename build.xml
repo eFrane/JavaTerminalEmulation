@@ -10,6 +10,20 @@
   <property name="dist" location="dist" />
   <property name="doc" location="doc" />
 
+  <!-- set the operating system test properties -->
+  <!-- source: http://www.devdaily.com/blog/post/java/how-determine-operating-system-os-ant-build-script -->
+  <condition property="isMac">
+    <os family="mac" />
+  </condition>
+
+  <condition property="isWindows">
+    <os family="windows" />
+  </condition>
+
+  <condition property="isUnix">
+    <os family="unix" />
+  </condition>
+
   <target name="init">
    <mkdir dir="${build}" />
   </target>
@@ -28,6 +42,13 @@
       <attribute name="Build-Number" value="${build.number}" />
     </manifest>
    </jar>
+   <antcall target="osx_app" />
+  </target>
+
+  <target name="osx_app" if="isMac">
+   <exec executable="./makeapp.sh">
+    <arg value="JavaTerminalEmulation" />
+   </exec>
   </target>
 
   <target name="run" depends="dist">

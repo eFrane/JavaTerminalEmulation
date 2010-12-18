@@ -2,7 +2,7 @@ package console.commands;
 
 import console.Console;
 
-abstract class Command {
+abstract public class Command {
   Console c;
 
   public void setConsole(Console c) {
