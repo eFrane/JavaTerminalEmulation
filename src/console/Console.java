@@ -109,8 +109,8 @@ public class Console extends JTextArea {
     writeln("Loading commands...", false);
     LinkedList<Class<?>> classes = new LinkedList<Class<?>>();
     try {
-      PackageInspector pi = new PackageInspector("console.commands.Command");
-      classes = pi.getClasses();
+      PackageInspector pi = new PackageInspector("console.commands");
+      classes = pi.getClasses("console.commands.Command");
     } catch (Exception e) {
       writeln("  WARNING: there was an error while loading the commands\n"
              +"           this console instance might be useless.", false);
