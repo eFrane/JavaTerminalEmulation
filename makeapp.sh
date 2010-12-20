@@ -24,7 +24,13 @@ cd makeapp_temp
 mkdir -p $app.app $app.app/Contents/MacOS $app.app/Contents/Resources/Java
 
 echo "Setting bundle bit..."
-/usr/bin/SetFile -a B $app.app
+which setfile
+if [ $? -eq 0 ]
+then
+  setfile -a B $app.app
+else
+  echo "[WARNING] Could not set bundle bit, application may be unusable."
+fi
 
 echo "Copying Mac OS Java Application stub..."
 cp -r /System/Library/Frameworks/JavaVM.framework/Versions/Current/Resources/MacOS/ ./$app.app/Contents/MacOS/
