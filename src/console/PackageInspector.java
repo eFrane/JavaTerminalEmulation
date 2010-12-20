@@ -46,7 +46,8 @@ public class PackageInspector {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	public LinkedList<Class<?>> getClasses(String baseClass) throws IOException, ClassNotFoundException  {
+	public LinkedList<Class<?>> getClasses(String baseClass) throws IOException,
+	  ClassNotFoundException  {
 		LinkedList<Class<?>> classes = getClasses();
 		for (Iterator<?> it = classes.iterator(); it.hasNext(); )
 	        if (!isSuperClass((Class<?>) it.next(), baseClass))
@@ -61,7 +62,8 @@ public class PackageInspector {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	public LinkedList<Class<?>> getClasses(Class<?> baseClass) throws IOException, ClassNotFoundException {
+	public LinkedList<Class<?>> getClasses(Class<?> baseClass) throws IOException,
+	  ClassNotFoundException {
 		return getClasses(baseClass.getCanonicalName());
 	}
 
@@ -123,6 +125,14 @@ public class PackageInspector {
 			}
 			if (filePath != null) {
 				classes.addAll(getFromDirectory(new File(filePath)));
+				if (classes.size() == 0) {
+				  /**
+				   * If there couldn't be fetched any classes from a directory,
+				   * it is highly likable that this happened because the
+				   * to-be-inspected class resides inside a jar-Package.
+				   **/
+				   classes.addAll(getFromJar(filePath));
+				}
 			}
 		}
 	}
@@ -133,17 +143,48 @@ public class PackageInspector {
 	 * @return
 	 * @throws ClassNotFoundException
 	 */
-	protected Collection<? extends Class<?>> getFromDirectory(File directory) throws ClassNotFoundException {
+	protected Collection<? extends Class<?>> getFromDirectory(File directory)
+	  throws ClassNotFoundException {
 		Collection<Class<?>> classes = new LinkedList<Class<?>>();
 		if (directory.exists()) {
 			for (String file: directory.list()) {
 				if (file.endsWith(".class")) {
+				  System.out.println(file);
 					String className = packageName + "." + file.replaceAll(".class", "");
-					Class<?> clazz = Class.forName(className);
-					classes.add(clazz);
+					Class<?> cl = Class.forName(className);
+					classes.add(cl);
 				}
 			}
 		}
 		return classes;
+	}
+
+	/**
+	 * isInJar tests (simple String match) if a requested class is inside a jar-file
+	 * and if the jar is loaded.
+	 * @param className fq class name
+	 * @return true if both conditions hold
+	 **/
+	protected boolean isInJar(String className) {
+	  return false;
+	}
+
+	/**
+	 * sanitize a jar path
+	 * @param className a class name inside of the requested jar
+	 * @return the path
+	 **/
+	protected String sanitizeJarPath(String className) {
+	  return null;
+	}
+
+	/**
+	 * Fetches all matching classes out of a jar-resident package.
+	 * @param jarPath
+	 * @param sanitized
+	 * @return list of packages
+	 **/
+	protected Collection<? extends Class<?>> getFromJar(File jarPath, boolean sanitized) {
+	  return null;
 	}
 }
