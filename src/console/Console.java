@@ -31,6 +31,9 @@ public class Console extends JTextArea {
 
   public Console(int rows, int columns) {
     super(rows, columns);
+    for (KeyListener l: getKeyListeners()) {
+      removeKeyListener(l);
+    }
     addKeyListener(listener);
     setAutoscrolls(true);
     setLineWrap(true);
@@ -106,8 +109,8 @@ public class Console extends JTextArea {
     writeln("Loading commands...", false);
     LinkedList<Class<?>> classes = new LinkedList<Class<?>>();
     try {
-      PackageInspector pi = new PackageInspector("console.commands");
-      classes = pi.getClasses("Command");
+      PackageInspector pi = new PackageInspector("console.commands.Command");
+      classes = pi.getClasses();
     } catch (Exception e) {
       writeln("  WARNING: there was an error while loading the commands\n"
              +"           this console instance might be useless.", false);
@@ -154,11 +157,13 @@ public class Console extends JTextArea {
       }
     }
 
-    public void keyReleased(KeyEvent e) {
+    public synchronized void keyReleased(KeyEvent e) {
       Console c = (Console) e.getSource();
-      if (!e.isActionKey())
+      if (!e.isActionKey()) {
+        c.setEnabled(false);
         switch (e.getKeyCode()) {
           case KeyEvent.VK_ENTER:
+            e.consume();
             c.executeCommand();
             c.write(c.delimiter);
             break;
@@ -177,7 +182,9 @@ public class Console extends JTextArea {
             c.currentLineOffset++;
             c.currentLineContent += String.valueOf(e.getKeyChar());
         }
-      c.currentOffset = c.getCaretPosition();
+        c.setEnabled(true);
+        c.currentOffset = c.getCaretPosition();
+      }
     }
 
     public void keyTyped(KeyEvent e) {}
