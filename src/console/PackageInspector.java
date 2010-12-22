@@ -124,15 +124,11 @@ public class PackageInspector {
 				filePath = filePath.replaceAll("%20", " ");
 			}
 			if (filePath != null) {
-				classes.addAll(getFromDirectory(new File(filePath)));
-				if (classes.size() == 0) {
-				  /**
-				   * If there couldn't be fetched any classes from a directory,
-				   * it is highly likable that this happened because the
-				   * to-be-inspected class resides inside a jar-Package.
-				   **/
-				   classes.addAll(getFromJar(filePath));
-				}
+			  if (!isInJar(filePath)) {
+          classes.addAll(getFromDirectory(new File(filePath)));
+        } else {
+          classes.addAll(getFromJar(new File(sanitizeJarPath(filePath))));
+        }
 			}
 		}
 	}
@@ -166,6 +162,9 @@ public class PackageInspector {
 	 * @return true if both conditions hold
 	 **/
 	protected boolean isInJar(String className) {
+	  if (className.indexOf(".jar") != 0) {
+	    return true;
+	  }
 	  return false;
 	}
 
@@ -180,11 +179,11 @@ public class PackageInspector {
 
 	/**
 	 * Fetches all matching classes out of a jar-resident package.
-	 * @param jarPath
-	 * @param sanitized
+	 * @param jarPath sanitized path to the jar
 	 * @return list of packages
 	 **/
-	protected Collection<? extends Class<?>> getFromJar(File jarPath, boolean sanitized) {
+	protected Collection<? extends Class<?>> getFromJar(File jarPath) {
+
 	  return null;
 	}
 }
