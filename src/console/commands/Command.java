@@ -3,10 +3,10 @@ package console.commands;
 import console.Console;
 
 abstract public class Command {
-  Console c;
+  Console console;
 
   public void setConsole(Console c) {
-    this.c = c;
+    this.console = c;
   }
 
   abstract public int execute(String[] args);
