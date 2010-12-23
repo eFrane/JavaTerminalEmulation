@@ -3,10 +3,13 @@ package console;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * The PackageInspector allows to get all classes from a specified package.
@@ -34,7 +37,8 @@ public class PackageInspector {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	public LinkedList<Class<?>> getClasses() throws IOException, ClassNotFoundException {
+	public LinkedList<Class<?>> getClasses() throws IOException, ClassNotFoundException,
+	  URISyntaxException {
 		obtainClassList();
 		return classes;
 	}
@@ -47,7 +51,7 @@ public class PackageInspector {
 	 * @throws ClassNotFoundException
 	 */
 	public LinkedList<Class<?>> getClasses(String baseClass) throws IOException,
-	  ClassNotFoundException  {
+	  ClassNotFoundException, URISyntaxException  {
 		LinkedList<Class<?>> classes = getClasses();
 		for (Iterator<?> it = classes.iterator(); it.hasNext(); )
 	        if (!isSuperClass((Class<?>) it.next(), baseClass))
@@ -63,7 +67,7 @@ public class PackageInspector {
 	 * @throws ClassNotFoundException
 	 */
 	public LinkedList<Class<?>> getClasses(Class<?> baseClass) throws IOException,
-	  ClassNotFoundException {
+	  ClassNotFoundException, URISyntaxException {
 		return getClasses(baseClass.getCanonicalName());
 	}
 
@@ -100,7 +104,8 @@ public class PackageInspector {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	protected void obtainClassList() throws IOException, ClassNotFoundException {
+	protected void obtainClassList() throws IOException, ClassNotFoundException,
+	  URISyntaxException {
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		obtainClassList(cl);
 	}
@@ -110,27 +115,35 @@ public class PackageInspector {
 	 * Using the thread's class loader enables the package inspector to be used with
 	 * any available loader.
 	 *
+	 * The inJar-condition check is based on a code example found at http://bit.ly/gqVpFs
+	 *
 	 * @param loader
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	protected void obtainClassList(ClassLoader loader) throws IOException, ClassNotFoundException {
+	protected void obtainClassList(ClassLoader loader) throws IOException, ClassNotFoundException,
+	  URISyntaxException {
 		String path = packageName.replace('.', '/');
 
-		Enumeration<URL> resources = loader.getResources(path);
-		if (resources != null) {
-			String filePath = resources.nextElement().getFile();
-			if (filePath.indexOf("%20") > 0) {
-				filePath = filePath.replaceAll("%20", " ");
-			}
-			if (filePath != null) {
-			  if (!isInJar(filePath)) {
-          classes.addAll(getFromDirectory(new File(filePath)));
-        } else {
-          classes.addAll(getFromJar(new File(sanitizeJarPath(filePath))));
+    URL u = PackageInspector.class.getProtectionDomain().getCodeSource().getLocation();
+    if (u.toString().endsWith(".jar")) {
+      JarFile jf = new JarFile(new File(u.toURI()));
+
+      Enumeration<JarEntry> e = jf.entries();
+      classes.addAll(getFromJar(u.toString(), e));
+      jf.close();
+    } else {
+      Enumeration<URL> resources = loader.getResources(path);
+      if (resources != null) {
+        String filePath = resources.nextElement().getFile();
+        if (filePath.indexOf("%20") > 0) {
+          filePath = filePath.replaceAll("%20", " ");
         }
-			}
-		}
+        if (filePath != null) {
+          classes.addAll(getFromDirectory(new File(filePath)));
+        }
+      }
+    }
 	}
 
 	/**
@@ -145,7 +158,6 @@ public class PackageInspector {
 		if (directory.exists()) {
 			for (String file: directory.list()) {
 				if (file.endsWith(".class")) {
-				  System.out.println(file);
 					String className = packageName + "." + file.replaceAll(".class", "");
 					Class<?> cl = Class.forName(className);
 					classes.add(cl);
@@ -156,34 +168,22 @@ public class PackageInspector {
 	}
 
 	/**
-	 * isInJar tests (simple String match) if a requested class is inside a jar-file
-	 * and if the jar is loaded.
-	 * @param className fq class name
-	 * @return true if both conditions hold
-	 **/
-	protected boolean isInJar(String className) {
-	  if (className.indexOf(".jar") != 0) {
-	    return true;
-	  }
-	  return false;
-	}
-
-	/**
-	 * sanitize a jar path
-	 * @param className a class name inside of the requested jar
-	 * @return the path
-	 **/
-	protected String sanitizeJarPath(String className) {
-	  return null;
-	}
-
-	/**
-	 * Fetches all matching classes out of a jar-resident package.
-	 * @param jarPath sanitized path to the jar
-	 * @return list of packages
-	 **/
-	protected Collection<? extends Class<?>> getFromJar(File jarPath) {
-
-	  return null;
+	 * getFromJar gets all class files that reside inside a jar
+	 * @param list of jar entries
+	 * @return
+	 * @throws ClassNotFoundException
+	 */
+	protected Collection<? extends Class<?>> getFromJar(String jarPath, Enumeration<JarEntry> entries)
+	  throws ClassNotFoundException {
+	  Collection<Class<?>> classes = new LinkedList<Class<?>>();
+    while (entries.hasMoreElements()) {
+      JarEntry jf = entries.nextElement();
+      if (jf.toString().endsWith(".class")) {
+        String className = jf.toString().replaceAll("/", ".").replaceAll(".class", "");
+        Class<?> cl = Class.forName(className);
+        classes.add(cl);
+      }
+    }
+    return classes;
 	}
 }
